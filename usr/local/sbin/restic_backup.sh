@@ -21,9 +21,12 @@ RETENTION_WEEKS=16
 RETENTION_MONTHS=18
 RETENTION_YEARS=3
 
+# Setup Env
+source /root/.restic_env
+
 # What to backup, and what to not
-BACKUP_PATHS="/ /boot /home"
-[ -d /mnt/media ] && BACKUP_PATHS+=" /mnt/media"
+BACKUP_PATHS="--files-from /root/.restic_files"
+#[ -d /mnt/media ] && BACKUP_PATHS+=" /mnt/media"
 BACKUP_EXCLUDES="--exclude-file /etc/restic/backup_exclude"
 for dir in /home/*
 do
@@ -38,10 +41,10 @@ BACKUP_TAG=systemd.timer
 
 # Set all environment variables like
 # B2_ACCOUNT_ID, B2_ACCOUNT_KEY, RESTIC_REPOSITORY etc.
-source /etc/restic/b2_env.sh
+# source /etc/restic/b2_env.sh
 
 # How many network connections to set up to B2. Default is 5.
-B2_CONNECTIONS=50
+# B2_CONNECTIONS=50
 
 # NOTE start all commands in background and wait for them to finish.
 # Reason: bash ignores any signals while child process is executing and thus my trap exit hook is not triggered.
@@ -60,7 +63,6 @@ restic backup \
 	--verbose \
 	--one-file-system \
 	--tag $BACKUP_TAG \
-	--option b2.connections=$B2_CONNECTIONS \
 	$BACKUP_EXCLUDES \
 	$BACKUP_PATHS &
 wait $!
@@ -71,7 +73,6 @@ wait $!
 restic forget \
 	--verbose \
 	--tag $BACKUP_TAG \
-	--option b2.connections=$B2_CONNECTIONS \
         --prune \
 	--group-by "paths,tags" \
 	--keep-daily $RETENTION_DAYS \
